@@ -1,0 +1,312 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet">
+    <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+    <title> Easy Map Marker </title>
+  </head>
+
+
+  <body>
+    <div id="page">
+
+      <h1> Easy Map Marker </h1>
+      <div id="content">
+
+        <!-- Instructions and controls -->
+        <div id="btn-ctr">
+
+          <h3> Instructions </h3>
+          <div class="text"> Click on the map to plot or remove a marker. Use below buttons to switch between projects and pin colors. </div>
+          <br><br>
+
+
+          <h3> Projects </h3>
+          <button id="proj0" class="proj-selected"> Operation AMSTERDAM </button>
+          <button id="proj1"> Operation BALTIMORE </button>
+          <button id="proj2"> Operation CASABLANCA </button>
+          <br>
+          <button id="clear"> Clear Map </button>
+          <br><br>
+
+          <h3> Pin Color </h3>
+          <div id="palette">
+            <div id="purple" class="col-selected"></div>
+            <div id="yellow"></div>
+          </div>
+
+        </div>
+
+        <!-- Map container -->
+        <div id="map" />
+
+      </div>
+    </div>
+
+
+    <script type="text/javascript">
+
+      /*--------------------------
+         LOAD MAP
+       ---------------------------*/
+      const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [123,12],
+        zoom: 4.7,
+      });
+
+
+      /*--------------------------
+         SET GLOBAL STATES
+       ---------------------------*/
+
+      region = "Philippines"
+      project = 0
+      markercolor = "#8080c0"
+      currents = []
+      upcomings = []
+      markers = []
+      projects = [
+        proj0 = {
+          id: "amsterdam",
+          current: [
+            [123,12],
+            [121.72,17.6]
+          ],
+          upcoming: [
+            [121,14.6]
+          ]
+        },
+        proj1 = {
+          id: "baltimore",
+          current: [
+            [122,12.2]
+          ],
+          upcoming: [
+            [121,14.6]
+          ]
+        },
+        proj2 = {
+          id: "casablanca",
+          current: [
+            [122,13.1],
+            [121.72,10]
+          ],
+          upcoming: []
+        }
+      ]
+
+      /*--------------------------
+         FUNCTIONS
+       ---------------------------*/
+
+      // Add markers to map
+      map.on('click', (e) => {
+        const { lng, lat } = e.lngLat
+        const marker = new maplibregl.Marker({ color: markercolor })
+          .setLngLat([lng, lat])
+          .addTo(map)
+        if (markercolor == "goldenrod")
+          upcomings.push([lng, lat])
+        else
+          currents.push([lng, lat])
+        markers.push(marker)
+      })
+
+      // Add Button event listeners
+      document.getElementById("proj0").addEventListener("click", (e)=>{
+        projects[project].current = currents
+        projects[project].upcoming = upcomings
+        changeProject(e.currentTarget, 0)
+        createView()
+      })
+
+      document.getElementById("proj1").addEventListener("click", (e)=>{
+        projects[project].current = currents
+        projects[project].upcoming = upcomings
+        changeProject(e.currentTarget, 1)
+        createView()
+      })
+
+      document.getElementById("proj2").addEventListener("click", (e)=>{
+        projects[project].current = currents
+        projects[project].upcoming = upcomings
+        changeProject(e.currentTarget, 2)
+        createView()
+      })
+
+      document.getElementById("clear").addEventListener("click", ()=>{
+        clear()
+      })
+
+      document.getElementById("purple").addEventListener("click", (e)=>{
+        changeColor(e.currentTarget, "#8080c0")
+      })
+
+      document.getElementById("yellow").addEventListener("click", (e)=>{
+        changeColor(e.currentTarget, "goldenrod")
+      })
+
+      // Create Current View
+      function createView(){
+        clear()
+        for(let coords of projects[project].current){
+          let marker = new maplibregl.Marker({ color: '#8080c0' })
+          .setLngLat(coords)
+          .addTo(map)
+          currents.push(coords)
+          markers.push(marker)
+        }
+
+        for(let coords of projects[project].upcoming){
+          let marker = new maplibregl.Marker({ color: 'goldenrod' })
+          .setLngLat(coords)
+          .addTo(map)
+          upcomings.push(coords)
+          markers.push(marker)
+        }
+      }
+
+      // Change Project
+      function changeProject(el, proj){
+        document.getElementsByClassName("proj-selected")[0].classList.remove("proj-selected")
+        el.classList.add("proj-selected")
+        project = proj
+      }
+
+      // Change Color
+      function changeColor(el, color){
+        document.getElementsByClassName("col-selected")[0].classList.remove("col-selected")
+        el.classList.add("col-selected")
+        markercolor = color
+      }
+
+      // Clear Map
+      function clear(){
+        for (let marker of markers)
+          marker.remove()
+        currents = []
+        upcomings = []
+      }
+
+      /*--------------------------
+         MAIN
+       ---------------------------*/
+      createView()
+
+    </script>
+
+  </body>
+
+  <style>
+    html, body{
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      background: whitesmoke;
+      color: #202A20;
+      font-family: Tahoma, sans-serif;
+      display: grid;
+    }
+
+    #page{
+      height: 100%;
+      width: 60%;
+      justify-self: center;
+    }
+
+    #content{
+      display: grid; 
+      grid-template-columns: 25% 65%;
+      grid-column-gap: 10%;
+      height: 100%;
+      width: 100%;
+    }
+
+    .text{
+      font-size: 0.9em;
+    }
+
+    #btn-ctr{
+      display: flex;
+      flex-direction: column;
+    }
+
+    #palette{
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #palette div{
+      height: 3em;
+      width: 3em;
+      margin-right: 0.5em;
+      cursor: pointer;
+    }
+
+    #purple{
+      background: #8080c0;
+    }
+
+    #yellow{
+      background: goldenrod;
+    }
+
+    button{
+      background: white;
+      padding: 0.6em 1em 0.6em 1em;
+      color: darkcyan;
+      border: 2px solid whitesmoke;
+      cursor: pointer;
+      margin-top: 0.5em;
+    }
+
+    button:hover{
+      background: gainsboro;
+      transition: 0.3s ease-in-out;
+    }
+
+    #palette div.col-selected, .proj-selected{
+      border: 2px solid green;
+    }
+
+
+    #clear{
+      background: #016450;
+      color: white;
+    }
+
+    #map{
+      height: 80%;
+      width: 100%; 
+    }
+
+    @media screen and (max-aspect-ratio: 3/2) {
+      h1{
+        margin: 4vh 0 2vh 0;
+      }
+
+      #page{
+        width: 95%;
+        font-size: 70%;
+      }
+
+      #content{
+        display: grid;
+        justify-content: end;
+        grid-column-gap: 7%;
+      }
+
+      button{
+        font-size: 90%;
+        padding: 0.8em;
+      }
+
+    }
+  </style>
+
+</html>
